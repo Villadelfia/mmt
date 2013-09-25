@@ -8,5 +8,7 @@ endif(WIN32)
 include_directories(src)
 
 add_executable(tga_encode 
-    src/tmspracticum3.cpp 
+    src/main.cpp
+    src/Tga.cpp
+    src/Color.cpp
     src/BitStream.cpp)
