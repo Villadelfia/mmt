@@ -46,11 +46,9 @@ bool Tga::read(const std::string& fName) {
 bool Tga::deSerialize() {
     util::BitStreamReader bs(mBuffer, mSize);
 
-    std::cout << "Reading header..." << std::endl;
     if(!readHeader(bs))
         return false;
 
-    std::cout << "Reading data..." << std::endl;
     if(!readData(bs))
         return false;
 
@@ -66,18 +64,16 @@ bool Tga::readHeader(util::BitStreamReader &bs) {
     if(imageType != 2)
         return false;
 
-    uint32_t cmapFirst = bs.get(8) + (bs.get(8) << 8); // First color map entry
-    uint32_t cmapLength = bs.get(8) + (bs.get(8) << 8); // Cmap entries amt
+    uint32_t cmapFirst = get2Bytes(bs); // First color map entry
+    uint32_t cmapLength = get2Bytes(bs); // Cmap entries amt
     uint32_t cmapESize = bs.get(8); // Cmap entry size in bits
 
     bs.get(16); // Origin x and y offset
     bs.get(16);
 
-    mData.width(bs.get(8) + (bs.get(8) << 8)); // Width, height and bit depth
-    mData.height(bs.get(8) + (bs.get(8) << 8));
+    mData.width(get2Bytes(bs)); // Width, height and bit depth
+    mData.height(get2Bytes(bs));
     mData.bitDepth(bs.get(8));
-    std::cout << "Image resolution: " << mData.width() <<
-        "*" << mData.height() << "*" << mData.bitDepth() << std::endl;
 
     bs.get(2); // Interleaving
     if(bs.get(2) != 0) // Both origin and reserved bit must be 0.
@@ -140,10 +136,8 @@ bool Tga::readData(util::BitStreamReader &bs) {
 bool Tga::write(const std::string& fName) {
     (void) fName;
 
-    std::cout << "Compressing..." << std::endl;
     compress();
 
-    std::cout << "Writing header..." << std::endl;
     int headerSize = 18;
     int size = headerSize + mCompressed.size();
 
@@ -158,15 +152,12 @@ bool Tga::write(const std::string& fName) {
     bs.put(16, 0);
 
     // Resolution
-    uint16_t w = mData.width();
-    uint16_t h = mData.height();
-    bs.put(16, ((w << 8) & 0xFF00) | ((w >> 8) & 0x00FF));
-    bs.put(16, ((h << 8) & 0xFF00) | ((h >> 8) & 0x00FF));
+    bs.put(16, byteSwap(mData.width()));
+    bs.put(16, byteSwap(mData.height()));
     bs.put(8, mData.bitDepth());
 
     bs.put(8, 0); // Descriptor byte
 
-    std::cout << "Writing data..." << std::endl;
     // Output the compressed data
     for(size_t i = 0; i < mCompressed.size(); ++i) {
         bs.put(8, mCompressed[i]);
@@ -315,4 +306,16 @@ void Tga::serializePixel(const Color &c) {
         mCompressed.push_back(c.r());
         mCompressed.push_back(0);
     }
+}
+
+uint16_t Tga::get2Bytes(util::BitStreamReader &bs) {
+    uint16_t lo = bs.get(8) & 0x00FF;
+    uint16_t hi = (bs.get(8) << 8) & 0xFF00;
+    return (hi | lo);
+}
+
+uint16_t Tga::byteSwap(uint16_t i) {
+    uint16_t lo = i & 0x00FF;
+    uint16_t hi = i & 0xFF00;
+    return (lo << 8) | (hi >> 8);
 }

@@ -22,6 +22,8 @@ private:
     bool serialize();
     void compress();
     void serializePixel(const Color &c);
+    uint16_t get2Bytes(util::BitStreamReader &bs);
+    uint16_t byteSwap(uint16_t i);
 
     uint8_t* mBuffer;
     int mSize;
