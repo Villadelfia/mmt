@@ -8,7 +8,7 @@
 int main(int argc, char* argv[]) {
     Tga tga;
     if(argc < 3) {
-        std::cout << "Usage: " << argv[0] << "in.tga out.tga" <<std::endl;
+        std::cout << "Usage: " << argv[0] << " in.tga out.tga" <<std::endl;
         return 1;
     }
 
