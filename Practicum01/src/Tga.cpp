@@ -134,8 +134,6 @@ bool Tga::readData(util::BitStreamReader &bs) {
 }
 
 bool Tga::write(const std::string& fName) {
-    (void) fName;
-
     compress();
 
     int headerSize = 18;
