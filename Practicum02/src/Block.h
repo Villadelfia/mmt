@@ -17,33 +17,41 @@ public:
         std::memset(mRawData, 0, sizeof(T) * 16);
     }
 
+    void data(T newData[4][4]) {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                mRawData[i][j] = newData[i][j];
+            }
+        }
+    }
+
     void data(std::size_t r, std::size_t c, T value) {
         mRawData[r][c] = value;
     }
 
-    T data(std::size_t r, std::size_t c) {
+    T data(std::size_t r, std::size_t c) const {
         return mRawData[r][c];
     }
 
-    Block<T> matMult(const Block<T>& b) {
+    template<class U>
+    Block<U> matMult(const Block<U>& b) const {
         // Do a real matrix multiplication.
-        Block<T> ret;
-
+        Block<U> ret;
         for(int i = 0; i < 4; ++i) {
             for(int j = 0; j < 4; ++j) {
                 // We are setting the field ret.mRawData[i][j]
-                ret.mRawData[i][j] = 0;
+                ret.data(i, j, 0);
                 for(int k = 0; k < 4; ++k) {
                     // Row i of A * column j of B.
-                    ret.mRawData[i][j] += mRawData[i][k] * b.mRawData[k][j];
+                    ret.data(i, j, ret.data(i, j) + (mRawData[i][k] * b.data(k, j)));
+                    // ret.mRawData[i][j] += mRawData[i][k] * b.mRawData[k][j];
                 }
             }
         }
-
         return ret;
     }
 
-    Block<T> operator*(const Block<T>& mul) {
+    Block<T> operator*(const Block<T>& mul) const {
         // Multiply the data linearly by mul.
         Block<T> ret;
         for(int i = 0; i < 4; ++i) {
@@ -54,7 +62,7 @@ public:
         return ret;
     }
 
-    Block<T> operator/(const Block<T>& div) {
+    Block<T> operator/(const Block<T>& div) const {
         // Divide the data linearly by div.
         Block<T> ret;
         for(int i = 0; i < 4; ++i) {
