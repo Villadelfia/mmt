@@ -10,9 +10,11 @@ include_directories(src)
 add_executable(encoder 
     src/encoder.cpp
     src/ConfigReader.cpp
+    src/Block.cpp
     src/BitStream.cpp)
 
 add_executable(decoder 
     src/decoder.cpp
     src/ConfigReader.cpp
+    src/Block.cpp
     src/BitStream.cpp)
