@@ -2,19 +2,17 @@ cmake_minimum_required(VERSION 2.6)
 project(MMTPracticum2)
 
 if(WIN32)
-  include_directories(encoder/win32)
-  include_directories(decoder/win32)
+  include_directories(src/win32)
 endif(WIN32)
 
-include_directories(encoder)
-include_directories(decoder)
+include_directories(src)
 
 add_executable(encoder 
-    encoder/main.cpp
-    encoder/ConfigReader.cpp
-    encoder/BitStream.cpp)
+    src/encoder.cpp
+    src/ConfigReader.cpp
+    src/BitStream.cpp)
 
 add_executable(decoder 
-    decoder/main.cpp
-    decoder/ConfigReader.cpp
-    decoder/BitStream.cpp)
+    src/decoder.cpp
+    src/ConfigReader.cpp
+    src/BitStream.cpp)
