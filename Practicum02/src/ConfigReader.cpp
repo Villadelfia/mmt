@@ -63,6 +63,10 @@ bool ConfigReader::getKeyValue(const std::string& key, std::string& value) {
     return true;
 }
 
+bool ConfigReader::keyValueExists(const std::string& key) {
+    return config.find(key) != config.end();
+}
+
 void ConfigReader::printAll() const {
     for(std::map<std::string, std::string>::const_iterator it = config.begin();
             it != config.end();

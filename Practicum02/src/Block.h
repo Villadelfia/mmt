@@ -6,6 +6,7 @@
 #define BLOCK_H_
 
 #include <cstddef>
+#include <iostream>
 #include <cstring>
 #include <stdint.h>
 
@@ -72,6 +73,29 @@ public:
         }
         return ret;
     }
+
+    void printData() {
+        std::cout << "{" << mRawData[0][0] << ", "<< mRawData[0][1] << ", "<<
+            mRawData[0][2] << ", " << mRawData[0][3] << "}" << std::endl;
+        std::cout << "{" << mRawData[1][0] << ", "<< mRawData[1][1] << ", "<<
+            mRawData[1][2] << ", " << mRawData[1][3] << "}" << std::endl;
+        std::cout << "{" << mRawData[2][0] << ", "<< mRawData[2][1] << ", "<<
+            mRawData[2][2] << ", " << mRawData[2][3] << "}" << std::endl;
+        std::cout << "{" << mRawData[3][0] << ", "<< mRawData[3][1] << ", "<<
+            mRawData[3][2] << ", " << mRawData[3][3] << "}" << std::endl;
+    }
+
+    bool containsZero() const {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                if(mRawData[i][j] ==0)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+
 
 private:
     T mRawData[4][4];

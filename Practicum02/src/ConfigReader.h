@@ -15,6 +15,7 @@ public:
 
     bool read(const std::string& fName);
     bool getKeyValue(const std::string& key, std::string& value);
+    bool keyValueExists(const std::string& key);
     void printAll() const;
     void clear();
 
