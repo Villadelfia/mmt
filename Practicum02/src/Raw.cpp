@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cmath>
 #include "Raw.h"
 
 Raw::Raw(const std::string& fn, int w, int h) : mWidth(w), mHeight(h) {
@@ -29,6 +30,10 @@ Raw::~Raw() {
 }
 
 void Raw::read(const std::string& fn) {
+    if(mBuffer)
+        delete[] mBuffer;
+    mBuffer = NULL;
+
     // Read file into buffer.
     std::cout << "Reading " << fn << std::endl;
     std::ifstream ifs(fn.data(), std::ifstream::binary);
@@ -84,9 +89,72 @@ void Raw::read(const std::string& fn) {
         mData.push_back(block);
     }
 
+    delete[] mBuffer;
+    mBuffer = NULL;
+
     std::cout << std::endl;
 }
 
 void Raw::write(const std::string& fn) {
+    if(mBuffer)
+        delete[] mBuffer;
+    mBuffer = NULL;
 
+    std::cout << "Preparing output buffer" << std::flush;
+    if((int)mData.size() != (mWidth / 4) * (mHeight / 4)) {
+        std::cerr << "Invalid amount of blocks" << std::endl;
+        return;
+    }
+
+    int beginIdx = 0;
+    int range = mWidth / 4;
+    mBuffer = new uint8_t[mData.size() * 16];
+    int bufferPtr = 0;
+
+    while(beginIdx < (int)mData.size()) {
+        std::cout << '.' << std::flush;
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < range; ++j) {
+                if(bufferPtr + 3 >= (int)mData.size() * 16) {
+                    std::cerr << "Buffer too small" << std::endl;
+                    return;
+                }
+
+                if(beginIdx + j >= (int)mData.size()) {
+                    std::cout << "Insufficient data" << std::endl;
+                    return;
+                }
+
+                // Add row i of block beginIdx + j to the buffer here.
+                // I am clamping to a max of 255 here, for rounding errors.
+                mBuffer[bufferPtr + 0] = std::floor(std::min(
+                            mData[beginIdx + j].data(i, 0), 255.0));
+                mBuffer[bufferPtr + 1] = std::floor(std::min(
+                            mData[beginIdx + j].data(i, 1), 255.0));
+                mBuffer[bufferPtr + 2] = std::floor(std::min(
+                            mData[beginIdx + j].data(i, 2), 255.0));
+                mBuffer[bufferPtr + 3] = std::floor(std::min(
+                            mData[beginIdx + j].data(i, 3), 255.0));
+                bufferPtr += 4;
+            }
+        }
+        beginIdx += range;
+    }
+    std::cout << std::endl;
+
+    std::cout << "Writing " << fn << std::endl;
+
+    std::ofstream ofs(fn.c_str());
+
+    if(ofs) {
+        for(unsigned long i = 0; i < mData.size() * 16; ++i) {
+            ofs << mBuffer[i];
+        }
+
+        ofs.flush();
+        ofs.close();
+    } else {
+        std::cerr << "Error writing " << fn << std::endl;
+        return;
+    }
 }
