@@ -88,5 +88,5 @@ void Raw::read(const std::string& fn) {
 }
 
 void Raw::write(const std::string& fn) {
-    // Implement this Anna.
+
 }

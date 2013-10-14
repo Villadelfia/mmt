@@ -9,6 +9,7 @@
 #include "DCT.h"
 #include "Raw.h"
 #include "Quantizer.h"
+#include "Linearizer.h"
 
 int main(int argc, char* argv[]) {
     if(argc < 2) {
@@ -88,8 +89,13 @@ int main(int argc, char* argv[]) {
 
     // We hand the quantized blocks to the Linearizer.
     blocks = quantizer.blocks();
+    Linearizer linearizer(blocks);
 
     // We hand these linear blocks to the RLE class if needed.
+    std::vector<std::vector<int16_t> > vectors = linearizer.vectors();
+    if(rleEnabled) {
+        // RLE here.
+    }
 
     // We hand the linearized blocks to the Enc class, and tell it to write.
 
