@@ -14,11 +14,12 @@ class Quantizer {
 public:
     Quantizer() {}
     Quantizer(std::vector<Block<double> >& data, const std::string& qfn);
-    Quantizer(std::vector<Block<double> >& data);
+    Quantizer(std::vector<Block<double> >& data, Block<double>& qmat);
     Quantizer(const std::string& qfn);
 
     void blocks(std::vector<Block<double> >& data) { mData = data; }
     std::vector<Block<double> > blocks() { return mData; }
+    Block<double> quantMat() { return mQuantMat; }
     bool hadError() { return mHadError; }
 
     void getQuantMatrix(const std::string& qfn);

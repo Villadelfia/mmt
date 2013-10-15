@@ -10,6 +10,7 @@
 #include "Raw.h"
 #include "Quantizer.h"
 #include "Linearizer.h"
+#include "Enc.h"
 
 int main(int argc, char* argv[]) {
     if(argc < 2) {
@@ -98,16 +99,30 @@ int main(int argc, char* argv[]) {
     }
 
     // We hand the linearized blocks to the Enc class, and tell it to write.
+    Block<double> qMat = quantizer.quantMat();
+    Enc output(vectors, outFileName, false, width, height, qMat);
 
     // TESTING CODE
+    // Read encoded output file.
+    Enc testEnc(outFileName);
+    vectors = testEnc.vectors();
+
+    // Delinearize vectors from output file.
     Linearizer delin(vectors);
     blocks = delin.blocks();
-    Quantizer dequant(blocks, quantFileName);
+
+    // Dequantizing
+    Block<double> qmat = testEnc.quantMat();
+    Quantizer dequant(blocks, qmat);
     dequant.deQuantize();
     blocks = dequant.blocks();
+
+    // Inverse DCT
     DCT dedct(blocks);
     dedct.invertDCT();
     blocks = dedct.blocks();
-    Raw output(blocks, "test.raw", width, height);
+
+    // Write back to raw.
+    Raw testOutput(blocks, "test.raw", testEnc.width(), testEnc.height());
 }
 

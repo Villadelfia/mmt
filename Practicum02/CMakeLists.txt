@@ -11,6 +11,7 @@ add_executable(encoder
     src/encoder.cpp
     src/ConfigReader.cpp
     src/Raw.cpp
+    src/Enc.cpp
     src/RLE.cpp
     src/DCT.cpp
     src/Quantizer.cpp
@@ -21,6 +22,7 @@ add_executable(decoder
     src/decoder.cpp
     src/ConfigReader.cpp
     src/Raw.cpp
+    src/Enc.cpp
     src/RLE.cpp
     src/DCT.cpp
     src/Quantizer.cpp

@@ -14,8 +14,8 @@ Quantizer::Quantizer(std::vector<Block<double> >& data, const std::string& qfn) 
     getQuantMatrix(qfn);
 }
 
-Quantizer::Quantizer(std::vector<Block<double> >& data) :
-    mData(data) {
+Quantizer::Quantizer(std::vector<Block<double> >& data, Block<double>& qmat) :
+    mData(data), mQuantMat(qmat) {
     mHadError = false;
 }
 
