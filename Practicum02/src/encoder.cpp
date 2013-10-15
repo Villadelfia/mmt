@@ -99,5 +99,15 @@ int main(int argc, char* argv[]) {
 
     // We hand the linearized blocks to the Enc class, and tell it to write.
 
+    // TESTING CODE
+    Linearizer delin(vectors);
+    blocks = delin.blocks();
+    Quantizer dequant(blocks, quantFileName);
+    dequant.deQuantize();
+    blocks = dequant.blocks();
+    DCT dedct(blocks);
+    dedct.invertDCT();
+    blocks = dedct.blocks();
+    Raw output(blocks, "test.raw", width, height);
 }
 
