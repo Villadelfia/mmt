@@ -18,7 +18,7 @@ Linearizer::Linearizer(const std::vector<std::vector<int16_t> >& linvec) :
 
 void Linearizer::linearize() {
     std::cout << "Linearizing blocks" << std::flush;
-    for(unsigned long i = 1; i < mBlocks.size(); ++i) {
+    for(unsigned long i = 0; i < mBlocks.size(); ++i) {
         if(i % (int)((mBlocks.size() * 0.05) + 1) == 0)
             std::cout << "." << std::flush;
         mData.push_back(linBlock(mBlocks[i]));
@@ -28,28 +28,28 @@ void Linearizer::linearize() {
 
 std::vector<int16_t> Linearizer::linBlock(Block<double>& b) {
     std::vector<int16_t> ret;
-    ret.push_back(std::floor(std::min(b.data(0, 0), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(0, 1), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(1, 0), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(2, 0), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(1, 1), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(0, 2), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(0, 3), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(1, 2), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(2, 1), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(3, 0), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(3, 1), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(2, 2), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(1, 3), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(2, 3), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(3, 2), 255.0)));
-    ret.push_back(std::floor(std::min(b.data(3, 3), 255.0)));
+    ret.push_back(std::floor(b.data(0, 0) + 0.5));
+    ret.push_back(std::floor(b.data(0, 1) + 0.5));
+    ret.push_back(std::floor(b.data(1, 0) + 0.5));
+    ret.push_back(std::floor(b.data(2, 0) + 0.5));
+    ret.push_back(std::floor(b.data(1, 1) + 0.5));
+    ret.push_back(std::floor(b.data(0, 2) + 0.5));
+    ret.push_back(std::floor(b.data(0, 3) + 0.5));
+    ret.push_back(std::floor(b.data(1, 2) + 0.5));
+    ret.push_back(std::floor(b.data(2, 1) + 0.5));
+    ret.push_back(std::floor(b.data(3, 0) + 0.5));
+    ret.push_back(std::floor(b.data(3, 1) + 0.5));
+    ret.push_back(std::floor(b.data(2, 2) + 0.5));
+    ret.push_back(std::floor(b.data(1, 3) + 0.5));
+    ret.push_back(std::floor(b.data(2, 3) + 0.5));
+    ret.push_back(std::floor(b.data(3, 2) + 0.5));
+    ret.push_back(std::floor(b.data(3, 3) + 0.5));
     return ret;
 }
 
 void Linearizer::delinearize() {
     std::cout << "Delinearizing blocks" << std::flush;
-    for(unsigned long i = 1; i < mData.size(); ++i) {
+    for(unsigned long i = 0; i < mData.size(); ++i) {
         if(i % (int)((mData.size() * 0.05) + 1) == 0)
             std::cout << "." << std::flush;
         mBlocks.push_back(delinVec(mData[i]));
