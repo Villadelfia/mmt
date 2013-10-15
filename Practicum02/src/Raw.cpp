@@ -111,6 +111,18 @@ void Raw::write(const std::string& fn) {
     mBuffer = new uint8_t[mData.size() * 16];
     int bufferPtr = 0;
 
+    // Normalize.
+    for(unsigned long i = 0; i < mData.size(); ++i) {
+        for(int j = 0; j < 4; ++j) {
+            for(int k = 0; k < 4; ++k) {
+                if(mData[i].data(j, k) < 0)
+                    mData[i].data(j, k, 0);
+                if(mData[i].data(j, k) > 255)
+                    mData[i].data(j, k, 255);
+            }
+        }
+    }
+
     while(beginIdx < (int)mData.size()) {
         std::cout << '.' << std::flush;
         for(int i = 0; i < 4; ++i) {
@@ -127,14 +139,14 @@ void Raw::write(const std::string& fn) {
 
                 // Add row i of block beginIdx + j to the buffer here.
                 // I am clamping to a max of 255 here, for rounding errors.
-                mBuffer[bufferPtr + 0] = std::floor(std::min(
-                            mData[beginIdx + j].data(i, 0), 255.0));
-                mBuffer[bufferPtr + 1] = std::floor(std::min(
-                            mData[beginIdx + j].data(i, 1), 255.0));
-                mBuffer[bufferPtr + 2] = std::floor(std::min(
-                            mData[beginIdx + j].data(i, 2), 255.0));
-                mBuffer[bufferPtr + 3] = std::floor(std::min(
-                            mData[beginIdx + j].data(i, 3), 255.0));
+                mBuffer[bufferPtr + 0] = std::floor(
+                            mData[beginIdx + j].data(i, 0) + 0.5);
+                mBuffer[bufferPtr + 1] = std::floor(
+                            mData[beginIdx + j].data(i, 1) + 0.5);
+                mBuffer[bufferPtr + 2] = std::floor(
+                            mData[beginIdx + j].data(i, 2) + 0.5);
+                mBuffer[bufferPtr + 3] = std::floor(
+                            mData[beginIdx + j].data(i, 3) + 0.5);
                 bufferPtr += 4;
             }
         }
