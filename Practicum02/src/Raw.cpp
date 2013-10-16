@@ -86,6 +86,11 @@ void Raw::read(const std::string& fn) {
         };
         block.data(newData);
 
+        // balance around 0
+        for(int i = 0; i < 4; ++i)
+            for(int j = 0; j < 4; ++j)
+                block.data(i, j, block.data(i, j) - 128);
+
         mData.push_back(block);
     }
 
@@ -110,6 +115,12 @@ void Raw::write(const std::string& fn) {
     int range = mWidth / 4;
     mBuffer = new uint8_t[mData.size() * 16];
     int bufferPtr = 0;
+
+    // undo balance around 0
+    for(unsigned long k = 0; k < mData.size(); ++k)
+        for(int i = 0; i < 4; ++i)
+            for(int j = 0; j < 4; ++j)
+                mData[k].data(i, j, mData[k].data(i, j) + 128);
 
     // Normalize.
     for(unsigned long i = 0; i < mData.size(); ++i) {

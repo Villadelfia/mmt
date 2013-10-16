@@ -5,13 +5,18 @@
 #ifndef RLE_H_
 #define RLE_H_
 
+#include <vector>
+
 class RLE {
 public:
-    RLE();
-    ~RLE();
+    RLE(std::vector<std::vector<int16_t> >& data) : mData(data) {}
 
+    void rle();
+    void unrle();
+
+    std::vector<std::vector<int16_t> > vectors() { return mData; }
 private:
-    /* data */
+    std::vector<std::vector<int16_t> > mData;
 };
 
 #endif /* RLE_H_ */

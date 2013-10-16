@@ -23,6 +23,7 @@ public:
     Block<double> quantMat() { return mQuantMat; }
     int width() { return mWidth; }
     int height() { return mHeight; }
+    bool hasRle() { return mHasRle; }
 
 private:
     std::vector<std::vector<int16_t> > mData;

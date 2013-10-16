@@ -43,7 +43,7 @@ void Enc::read(const std::string& fn) {
     util::BitStreamReader bs(buffer, size);
 
     // rle bit
-    mHasRle = bs.get_bit() == 1;
+    mHasRle = bs.get(8) == 255;
 
     // width and height
     mWidth = bs.get(16) * 4;
@@ -59,7 +59,30 @@ void Enc::read(const std::string& fn) {
 
     // Begin reading data.
     if(mHasRle) {
-        // TODO
+        // Get all the blocks.
+        for(int i = 0; i < (mWidth / 4) * (mHeight / 4); ++i) {
+            if(i % (int)(((mWidth / 4) * (mHeight / 4) * 0.05) + 1) == 0)
+                std::cout << "." << std::flush;
+            std::vector<int16_t> data;
+            bool valFound = false;
+            while(!valFound) {
+                // Get the amount of zeroes.
+                int16_t repeat = bs.get(4);
+                // And the value that follows.
+                int16_t value = 0;
+                if(bs.get_bit() == 1) {
+                    value = -bs.get(11);
+                } else {
+                    value = bs.get(11);
+                }
+                data.push_back(repeat);
+                data.push_back(value);
+                if(repeat == 0 && value == 0)
+                    valFound = true;
+            }
+            mData.push_back(data);
+            data.clear();
+        }
     } else {
         // Get all the blocks.
         for(int i = 0; i < (mWidth / 4) * (mHeight / 4); ++i) {
@@ -75,6 +98,7 @@ void Enc::read(const std::string& fn) {
                 }
             }
             mData.push_back(data);
+            data.clear();
         }
     }
 
@@ -83,15 +107,16 @@ void Enc::read(const std::string& fn) {
 
 void Enc::write(const std::string& fn) {
     std::cout << "Writing " << fn << std::flush;
-    // The header size is always 21.
+    // The header size is always 21 bytes.
     int headersize = 21;
     int datasize = 0;
     if(mHasRle) {
         // Every record is 2 bytes, there can be a maximum of 16 per vector
         for(unsigned long i = 0; i < mData.size(); ++ i) {
+            // This works because a vector of length 16 contains 8 subpackets,
+            // and thus uses 16 bytes for storage.
             datasize += mData[i].size();
         }
-        datasize *= 2;
     } else {
         // 2 bytes per value, of which there are 16 per vector.
         datasize = 2 * 16 * mData.size();
@@ -99,8 +124,8 @@ void Enc::write(const std::string& fn) {
 
     util::BitStreamWriter bs(headersize + datasize);
 
-    // rle bit
-    bs.put_bit(mHasRle ? 1 : 0);
+    // rle bit, stored as a byte
+    bs.put(8, mHasRle ? 255 : 0);
 
     // width and height
     bs.put(16, mWidth / 4);
@@ -116,7 +141,32 @@ void Enc::write(const std::string& fn) {
 
     // Begin writing data.
     if(mHasRle) {
-        // TODO
+        // Write each vector as a packet.
+        for(unsigned long i = 0; i < mData.size(); ++i) {
+            if(i % (int)((mData.size() * 0.05) + 1) == 0)
+                std::cout << "." << std::flush;
+
+            // Emergency stop, this should NEVER happen.
+            if(mData[i].size() % 2 != 0)
+                return;
+
+            for(unsigned long j = 0; j < mData[i].size(); j += 2) {
+                // Each packet contains n subpackets, containing 4 bits for the
+                // zeroes.
+                int16_t num = mData[i][j];
+                bs.put(4, num);
+
+                // And 12 bits for the actual number.
+                num = mData[i][j+1];
+                if(num < 0) {
+                    bs.put_bit(1);
+                    bs.put(11, -num);
+                } else {
+                    bs.put_bit(0);
+                    bs.put(11, num);
+                }
+            }
+        }
     } else {
         for(unsigned long i = 0; i < mData.size(); ++i) {
             if(i % (int)((mData.size() * 0.05) + 1) == 0)

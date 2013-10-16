@@ -8,6 +8,7 @@
 #include "Block.h"
 #include "DCT.h"
 #include "Raw.h"
+#include "RLE.h"
 #include "Quantizer.h"
 #include "Linearizer.h"
 #include "Enc.h"
@@ -94,20 +95,31 @@ int main(int argc, char* argv[]) {
 
     // We hand these linear blocks to the RLE class if needed.
     std::vector<std::vector<int16_t> > vectors = linearizer.vectors();
+
+    // RLE here.
+    RLE rle(vectors);
     if(rleEnabled) {
-        // RLE here.
+        rle.rle();
     }
 
     // We hand the linearized blocks to the Enc class, and tell it to write.
+    vectors = rle.vectors();
     Block<double> qMat = quantizer.quantMat();
-    Enc output(vectors, outFileName, false, width, height, qMat);
+    Enc output(vectors, outFileName, rleEnabled, width, height, qMat);
 
     // TESTING CODE
     // Read encoded output file.
     Enc testEnc(outFileName);
     vectors = testEnc.vectors();
 
+    // unRLE here.
+    RLE unrle(vectors);
+    if(testEnc.hasRle()) {
+        unrle.unrle();
+    }
+
     // Delinearize vectors from output file.
+    vectors = unrle.vectors();
     Linearizer delin(vectors);
     blocks = delin.blocks();
 
