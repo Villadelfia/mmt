@@ -196,28 +196,40 @@ void Enc::write(const std::string& fn) {
             // Edge case, if the packet is empty...
             if(mData[i][0] == 0 && mData[i][1] == 0) {
                 bs.put(4, 1); // DC uses 1 bit.
-                bs.put(2, 0); // DC is 0;
+                bs.put(2, 0); // DC is 0.
                 bs.put(4, 1); // ACs use 1 bit.
                 bs.put(6, 0); // End packet signal.
                 continue;
             }
 
-            // Bits used for dc:
-            int dcb = log2(std::abs(mData[i][1])) + 1;
-            bs.put(4, dcb);
-
-            // Write DC
-            if(mData[i][1] < 0) {
-                bs.put_bit(1);
-                bs.put(dcb, -mData[i][1]);
+            // Another edge case, dc can, in rare circumstances be equal to zero.
+            unsigned long jstart = 0;
+            unsigned long acbegin = 0;
+            if(mData[i][0] != 0) {
+                bs.put(4, 1); // DC uses 1 bit.
+                bs.put(2, 0); // DC is 0.
+                acbegin = 1;
+                jstart = 0;
             } else {
-                bs.put_bit(0);
-                bs.put(dcb, mData[i][1]);
+                // Bits used for dc:
+                int dcb = log2(std::abs(mData[i][1])) + 1;
+                bs.put(4, dcb);
+
+                // Write DC
+                if(mData[i][1] < 0) {
+                    bs.put_bit(1);
+                    bs.put(dcb, -mData[i][1]);
+                } else {
+                    bs.put_bit(0);
+                    bs.put(dcb, mData[i][1]);
+                }
+                acbegin = 3;
+                jstart = 2;
             }
 
             // Get max ac, and use it to get the amount of bits used to write it.
             int maxac = 0;
-            for(unsigned long j = 3; j < mData[i].size(); j += 2) {
+            for(unsigned long j = acbegin; j < mData[i].size(); j += 2) {
                 if(std::abs(mData[i][j]) > maxac)
                     maxac = std::abs(mData[i][j]);
             }
@@ -225,7 +237,7 @@ void Enc::write(const std::string& fn) {
             bs.put(4, acb);
 
             // Write the ACs.
-            for(unsigned long j = 2; j < mData[i].size(); j += 2) {
+            for(unsigned long j = jstart; j < mData[i].size(); j += 2) {
                 // We write the amount of repeating zeroes in 3 bits.
                 int16_t num = mData[i][j];
                 bs.put(4, num);
