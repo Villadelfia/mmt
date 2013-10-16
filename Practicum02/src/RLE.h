@@ -6,6 +6,7 @@
 #define RLE_H_
 
 #include <vector>
+#include "BitStream.h"
 
 class RLE {
 public:

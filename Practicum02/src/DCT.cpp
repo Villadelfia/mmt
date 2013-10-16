@@ -3,6 +3,12 @@
  **/
 
 #include "DCT.h"
+
+#ifdef WIN32
+    #define _USE_MATH_DEFINES
+    #include <math.h>
+#endif
+
 #include <cmath>
 #include <iostream>
 
@@ -38,8 +44,8 @@ void DCT::invertDCT() {
 
 void DCT::setup() {
     double a = 0.5;
-    double b = std::sqrt(0.5) * std::cos(PI/8);
-    double c = std::sqrt(0.5) * std::cos((3*PI)/8);
+    double b = std::sqrt(0.5) * std::cos(M_PI/8);
+    double c = std::sqrt(0.5) * std::cos((3*M_PI)/8);
 
     double DCT[4][4] = {
         {a,  a,  a,  a},

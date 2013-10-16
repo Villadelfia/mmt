@@ -167,7 +167,7 @@ void Raw::write(const std::string& fn) {
 
     std::cout << "Writing " << fn << std::endl;
 
-    std::ofstream ofs(fn.c_str());
+	std::ofstream ofs(fn.c_str(), std::ios::binary);
 
     if(ofs) {
         for(unsigned long i = 0; i < mData.size() * 16; ++i) {

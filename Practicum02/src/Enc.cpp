@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include "Enc.h"
 
 Enc::Enc(std::vector<std::vector<int16_t> >& vectors, const std::string& fn,
@@ -64,43 +65,85 @@ void Enc::read(const std::string& fn) {
             if(i % (int)(((mWidth / 4) * (mHeight / 4) * 0.05) + 1) == 0)
                 std::cout << "." << std::flush;
             std::vector<int16_t> data;
-            bool valFound = false;
-            while(!valFound) {
+
+            // Get the bitdepth.
+            int dcb = bs.get(4);
+
+            // Extract dc.
+            int16_t dc;
+            if(bs.get_bit() == 1) {
+                dc = -bs.get(dcb);
+            } else {
+                dc = bs.get(dcb);
+            }
+
+            if(dc != 0) {
+                data.push_back(0);
+                data.push_back(dc);
+            }
+
+            // Get ac bitdepth.
+            int acb = bs.get(4);
+
+            bool valFound = true;
+            while(valFound) {
                 // Get the amount of zeroes.
                 int16_t repeat = bs.get(4);
+
                 // And the value that follows.
                 int16_t value = 0;
                 if(bs.get_bit() == 1) {
-                    value = -bs.get(11);
+                    value = -bs.get(acb);
                 } else {
-                    value = bs.get(11);
+                    value = bs.get(acb);
                 }
+
                 data.push_back(repeat);
                 data.push_back(value);
+
                 if(repeat == 0 && value == 0)
-                    valFound = true;
+                    valFound = false;
             }
+
             mData.push_back(data);
             data.clear();
         }
     } else {
-        // Get all the blocks.
         for(int i = 0; i < (mWidth / 4) * (mHeight / 4); ++i) {
             if(i % (int)(((mWidth / 4) * (mHeight / 4) * 0.05) + 1) == 0)
                 std::cout << "." << std::flush;
             std::vector<int16_t> data;
-            for(int j = 0; j < 16; ++j) {
+
+            // Get the bitdepth.
+            int dcb = bs.get(4);
+
+            // Extract dc.
+            if(bs.get_bit() == 1) {
+                data.push_back(-bs.get(dcb));
+            } else {
+                data.push_back(bs.get(dcb));
+            }
+
+            // Get ac bitdepth.
+            int acb = bs.get(4);
+
+            // Extract ac.
+            for(int j = 1; j < 16; ++j) {
+                int value = 0;
                 if(bs.get_bit() == 1) {
                     // negative
-                    data.push_back(-bs.get(15));
+                    value = -bs.get(acb);
                 } else {
-                    data.push_back(bs.get(15));
+                    value = bs.get(acb);
                 }
+                data.push_back(value);
             }
+
             mData.push_back(data);
             data.clear();
         }
     }
+
 
     std::cout << std::endl;
 }
@@ -150,20 +193,51 @@ void Enc::write(const std::string& fn) {
             if(mData[i].size() % 2 != 0)
                 return;
 
-            for(unsigned long j = 0; j < mData[i].size(); j += 2) {
-                // Each packet contains n subpackets, containing 4 bits for the
-                // zeroes.
+            // Edge case, if the packet is empty...
+            if(mData[i][0] == 0 && mData[i][1] == 0) {
+                bs.put(4, 1); // DC uses 1 bit.
+                bs.put(2, 0); // DC is 0;
+                bs.put(4, 1); // ACs use 1 bit.
+                bs.put(6, 0); // End packet signal.
+                continue;
+            }
+
+            // Bits used for dc:
+            int dcb = log2(std::abs(mData[i][1])) + 1;
+            bs.put(4, dcb);
+
+            // Write DC
+            if(mData[i][1] < 0) {
+                bs.put_bit(1);
+                bs.put(dcb, -mData[i][1]);
+            } else {
+                bs.put_bit(0);
+                bs.put(dcb, mData[i][1]);
+            }
+
+            // Get max ac, and use it to get the amount of bits used to write it.
+            int maxac = 0;
+            for(unsigned long j = 3; j < mData[i].size(); j += 2) {
+                if(std::abs(mData[i][j]) > maxac)
+                    maxac = std::abs(mData[i][j]);
+            }
+            int acb = log2(maxac) + 1;
+            bs.put(4, acb);
+
+            // Write the ACs.
+            for(unsigned long j = 2; j < mData[i].size(); j += 2) {
+                // We write the amount of repeating zeroes in 3 bits.
                 int16_t num = mData[i][j];
                 bs.put(4, num);
 
-                // And 12 bits for the actual number.
+                // And acb bits for the actual number.
                 num = mData[i][j+1];
                 if(num < 0) {
                     bs.put_bit(1);
-                    bs.put(11, -num);
+                    bs.put(acb, -num);
                 } else {
                     bs.put_bit(0);
-                    bs.put(11, num);
+                    bs.put(acb, num);
                 }
             }
         }
@@ -171,21 +245,59 @@ void Enc::write(const std::string& fn) {
         for(unsigned long i = 0; i < mData.size(); ++i) {
             if(i % (int)((mData.size() * 0.05) + 1) == 0)
                 std::cout << "." << std::flush;
-            for(unsigned long j = 0; j < mData[i].size(); ++j) {
+
+            // Bits used for dc:
+            int dcb = log2(std::abs(mData[i][0])) + 1;
+            bs.put(4, dcb);
+
+            // Write the dc with that amount of bits + 1 (for sign)
+            if(mData[i][0] < 0) {
+                bs.put_bit(1);
+                bs.put(dcb, -mData[i][0]);
+            } else {
+                bs.put_bit(0);
+                bs.put(dcb, mData[i][0]);
+            }
+
+            // Get max ac, and use it to get the amount of bits used to write it.
+            int maxac = 0;
+            for(unsigned long j = 1; j < mData[i].size(); ++j) {
+                if(std::abs(mData[i][j]) > maxac)
+                    maxac = std::abs(mData[i][j]);
+            }
+            int acb = log2(maxac) + 1;
+            bs.put(4, acb);
+
+            // Write the acs using that bit-depth.
+            for(unsigned long j = 1; j < mData[i].size(); ++j) {
                 int16_t num = mData[i][j];
                 if(num < 0) {
                     bs.put_bit(1);
-                    bs.put(15, -num);
+                    bs.put(acb, -num);
                 } else {
                     bs.put_bit(0);
-                    bs.put(15, num);
+                    bs.put(acb, num);
                 }
             }
         }
     }
 
     std::ofstream f(fn.c_str(), std::ios::binary);
+
+    while(bs.get_position() % 8 != 0) {
+        bs.put_bit(0);
+    }
+
     util::write(f, bs);
 
     std::cout << std::endl;
+}
+
+int Enc::log2(int i) {
+    int ret = -1;
+    while(i > 0) {
+        i >>= 1;
+        ++ret;
+    }
+    return ret;
 }

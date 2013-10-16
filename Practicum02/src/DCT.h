@@ -4,7 +4,6 @@
 
 #ifndef DCT_H_
 #define DCT_H_
-#define PI M_PI
 
 #include "Block.h"
 #include <vector>

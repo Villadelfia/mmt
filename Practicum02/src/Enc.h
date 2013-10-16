@@ -24,6 +24,7 @@ public:
     int width() { return mWidth; }
     int height() { return mHeight; }
     bool hasRle() { return mHasRle; }
+    int log2(int i);
 
 private:
     std::vector<std::vector<int16_t> > mData;
