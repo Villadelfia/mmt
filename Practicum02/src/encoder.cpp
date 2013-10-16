@@ -106,35 +106,5 @@ int main(int argc, char* argv[]) {
     vectors = rle.vectors();
     Block<double> qMat = quantizer.quantMat();
     Enc output(vectors, outFileName, rleEnabled, width, height, qMat);
-
-    // TESTING CODE
-    // Read encoded output file.
-    Enc testEnc(outFileName);
-    vectors = testEnc.vectors();
-
-    // unRLE here.
-    RLE unrle(vectors);
-    if(testEnc.hasRle()) {
-        unrle.unrle();
-    }
-
-    // Delinearize vectors from output file.
-    vectors = unrle.vectors();
-    Linearizer delin(vectors);
-    blocks = delin.blocks();
-
-    // Dequantizing
-    Block<double> qmat = testEnc.quantMat();
-    Quantizer dequant(blocks, qmat);
-    dequant.deQuantize();
-    blocks = dequant.blocks();
-
-    // Inverse DCT
-    DCT dedct(blocks);
-    dedct.invertDCT();
-    blocks = dedct.blocks();
-
-    // Write back to raw.
-    Raw testOutput(blocks, "test.raw", testEnc.width(), testEnc.height());
 }
 
