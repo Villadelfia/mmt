@@ -46,7 +46,11 @@ bool ConfigReader::read(const std::string& fName) {
             return false;
         } else {
             // key is everything before the =, value is everything after.
-            config[line.substr(0, idx)] = line.substr(idx + 1);
+            std::string key = line.substr(0, idx);
+            std::string val = line.substr(idx + 1);
+            while(val.at(val.size()-1) == '\n' || val.at(val.size()-1) == '\r')
+                val.erase(val.size()-1);
+            config[key] = val;
         }
     }
 
