@@ -23,8 +23,8 @@ public:
     bool hadError() { return mHadError; }
 
     void getQuantMatrix(const std::string& qfn);
-    void quantize();
-    void deQuantize();
+    void quantize(std::string fn);
+    void deQuantize(std::string fn);
 
 private:
     std::vector<Block<double> > mData;

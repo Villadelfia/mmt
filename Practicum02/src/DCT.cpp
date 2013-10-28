@@ -10,7 +10,9 @@
 #endif
 
 #include <cmath>
+#include <string>
 #include <iostream>
+#include <fstream>
 
 DCT::DCT() {
     setup();
@@ -20,23 +22,45 @@ DCT::DCT(std::vector<Block<double> >& data) : mData(data) {
     setup();
 }
 
-void DCT::transformDCT() {
+void DCT::transformDCT(std::string fn) {
+    std::ofstream ofs(fn.c_str());
+    ofs << "DCT\n";
+
     std::cout << "Converting to frequency domain" << std::flush;
     for(std::size_t i = 0; i < mData.size(); ++i) {
         if(i % (int)((mData.size() * 0.05) + 1) == 0)
             std::cout << "." << std::flush;
         Block<double> out = mDCT.matMult(mData[i]).matMult(mTDCT);
+
+        ofs << i << '\n';
+        for(int j = 0; j < 4; ++j) {
+                ofs << out.data(j, 0) << " " << out.data(j, 1) << " " <<
+                   out.data(j, 2) << " " << out.data(j, 3) << "\n";
+        }
+        ofs << "\n\n";
+
         mData[i] = out;
     }
     std::cout << std::endl;
 }
 
-void DCT::invertDCT() {
+void DCT::invertDCT(std::string fn) {
+    std::ofstream ofs(fn.c_str(), std::ios::app);
+    ofs << "deDCT\n";
+
     std::cout << "Converting from frequency domain" << std::flush;
     for(std::size_t i = 0; i < mData.size(); ++i) {
         if(i % (int)((mData.size() * 0.05) + 1) == 0)
             std::cout << "." << std::flush;
         Block<double> out = mTDCT.matMult(mData[i]).matMult(mDCT);
+
+        ofs << i << '\n';
+        for(int j = 0; j < 4; ++j) {
+                ofs << out.data(j, 0) << " " << out.data(j, 1) << " " <<
+                   out.data(j, 2) << " " << out.data(j, 3) << "\n";
+        }
+        ofs << "\n\n";
+
         mData[i] = out;
     }
     std::cout << std::endl;

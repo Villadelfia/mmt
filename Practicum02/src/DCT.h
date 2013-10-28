@@ -6,6 +6,7 @@
 #define DCT_H_
 
 #include "Block.h"
+#include <string>
 #include <vector>
 
 class DCT {
@@ -16,8 +17,8 @@ public:
     void blocks(std::vector<Block<double> >& data) { mData = data; }
     std::vector<Block<double> > blocks() { return mData; }
 
-    void transformDCT();
-    void invertDCT();
+    void transformDCT(std::string fn);
+    void invertDCT(std::string fn);
     void setup();
 
 private:

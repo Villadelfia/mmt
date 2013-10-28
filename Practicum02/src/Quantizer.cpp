@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 
 Quantizer::Quantizer(std::vector<Block<double> >& data, const std::string& qfn) :
     mData(data) {
@@ -52,7 +53,10 @@ void Quantizer::getQuantMatrix(const std::string& qfn) {
     std::cout << std::endl;
 }
 
-void Quantizer::quantize() {
+void Quantizer::quantize(std::string fn) {
+    std::ofstream ofs(fn.c_str(), std::ios::app);
+    ofs << "QUANTIZATION\n";
+
     std::cout << "Quantizing blocks" << std::flush;
     if(mQuantMat.containsZero()) {
         std::cout << std::endl;
@@ -63,16 +67,33 @@ void Quantizer::quantize() {
         if(i % (int)((mData.size() * 0.05) + 1) == 0)
             std::cout << "." << std::flush;
         mData[i] = mData[i]/mQuantMat;
+
+        ofs << i << '\n';
+        for(int j = 0; j < 4; ++j) {
+                ofs << mData[i].data(j, 0) << " " << mData[i].data(j, 1) << " " <<
+                   mData[i].data(j, 2) << " " << mData[i].data(j, 3) << "\n";
+        }
+        ofs << "\n\n";
     }
     std::cout << std::endl;
 }
 
-void Quantizer::deQuantize() {
+void Quantizer::deQuantize(std::string fn) {
+    std::ofstream ofs(fn.c_str());
+    ofs << "deQUANTIZATION\n";
+
     std::cout << "Dequantizing blocks" << std::flush;
     for(std::size_t i = 0; i < mData.size(); ++i) {
         if(i % (int)((mData.size() * 0.05) + 1) == 0)
             std::cout << "." << std::flush;
         mData[i] = mData[i]*mQuantMat;
+
+        ofs << i << '\n';
+        for(int j = 0; j < 4; ++j) {
+                ofs << mData[i].data(j, 0) << " " << mData[i].data(j, 1) << " " <<
+                   mData[i].data(j, 2) << " " << mData[i].data(j, 3) << "\n";
+        }
+        ofs << "\n\n";
     }
     std::cout << std::endl;
 }

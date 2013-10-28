@@ -27,14 +27,15 @@ int main(int argc, char* argv[]) {
     }
 
     // Get the settings.
-    std::string rawFileName, outFileName, quantFileName;
+    std::string rawFileName, outFileName, quantFileName, logFileName;
     int width, height;
     bool rleEnabled;
 
     // Raw input file, encoded output file and quantization paramater file.
     if(!cfg.getKeyValue("rawfile", rawFileName) ||
         !cfg.getKeyValue("quantfile", quantFileName) ||
-        !cfg.getKeyValue("encfile", outFileName)) {
+        !cfg.getKeyValue("encfile", outFileName) ||
+        !cfg.getKeyValue("logfile", logFileName)) {
         std::cerr << cfg.getErrorDescription() << std::endl;
         return 1;
     }
@@ -78,7 +79,7 @@ int main(int argc, char* argv[]) {
     // We hand the blocks to the DCT class.
     std::vector<Block<double> > blocks = input.blocks();
     DCT dct(blocks);
-    dct.transformDCT();
+    dct.transformDCT(logFileName);
 
     // We hand the DCT blocks to the Quantizer class.
     blocks = dct.blocks();
@@ -87,7 +88,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Aborting" << std::endl;
         return 1;
     }
-    quantizer.quantize();
+    quantizer.quantize(logFileName);
 
     // We hand the quantized blocks to the Linearizer.
     blocks = quantizer.blocks();

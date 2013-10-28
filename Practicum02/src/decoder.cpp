@@ -27,11 +27,12 @@ int main(int argc, char* argv[]) {
     }
 
     // Get the settings.
-    std::string encFile, decFile;
+    std::string encFile, decFile, logFile;
 
     // Raw input file, encoded output file and quantization paramater file.
     if(!cfg.getKeyValue("decfile", decFile) ||
-        !cfg.getKeyValue("encfile", encFile)) {
+        !cfg.getKeyValue("encfile", encFile) ||
+        !cfg.getKeyValue("logfile", logFile)) {
         std::cerr << cfg.getErrorDescription() << std::endl;
         return 1;
     }
@@ -54,12 +55,12 @@ int main(int argc, char* argv[]) {
     std::vector<Block<double> > blocks = lin.blocks();
     Block<double> qmat = enc.quantMat();
     Quantizer quant(blocks, qmat);
-    quant.deQuantize();
+    quant.deQuantize(logFile);
 
     // Inverse DCT
     blocks = quant.blocks();
     DCT dct(blocks);
-    dct.invertDCT();
+    dct.invertDCT(logFile);
 
     // Write back to raw.
     blocks = dct.blocks();
