@@ -50,12 +50,15 @@ void Enc::read(const std::string& fn) {
     mWidth = bs.get(16) * 4;
     mHeight = bs.get(16) * 4;
 
+    // quantization log2
+    int quantbits = bs.get(4);
+
     // quantization matrix
     for(int i = 0; i < 4; ++i) {
-        mQuantMat.data(i, 0, bs.get(8));
-        mQuantMat.data(i, 1, bs.get(8));
-        mQuantMat.data(i, 2, bs.get(8));
-        mQuantMat.data(i, 3, bs.get(8));
+        mQuantMat.data(i, 0, bs.get(quantbits));
+        mQuantMat.data(i, 1, bs.get(quantbits));
+        mQuantMat.data(i, 2, bs.get(quantbits));
+        mQuantMat.data(i, 3, bs.get(quantbits));
     }
 
     // Begin reading data.
@@ -174,12 +177,21 @@ void Enc::write(const std::string& fn) {
     bs.put(16, mWidth / 4);
     bs.put(16, mHeight / 4);
 
+    // quantization matrix log2+1
+    int maxquant = 0;
+    for(int i = 0; i < 4; ++i)
+        for(int j = 0; j < 4; ++j)
+            if(mQuantMat.data(i, j) > maxquant)
+                maxquant = mQuantMat.data(i, j);
+    int quantbits = log2(maxquant) + 1;
+    bs.put(4, quantbits);
+
     // quantization matrix
     for(int i = 0; i < 4; ++i) {
-        bs.put(8, mQuantMat.data(i, 0));
-        bs.put(8, mQuantMat.data(i, 1));
-        bs.put(8, mQuantMat.data(i, 2));
-        bs.put(8, mQuantMat.data(i, 3));
+        bs.put(quantbits, mQuantMat.data(i, 0));
+        bs.put(quantbits, mQuantMat.data(i, 1));
+        bs.put(quantbits, mQuantMat.data(i, 2));
+        bs.put(quantbits, mQuantMat.data(i, 3));
     }
 
     // Begin writing data.
